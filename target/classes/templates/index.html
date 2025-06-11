@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SportsLens AI - 智能体育新闻</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;700&family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Roboto', 'Noto Sans SC', sans-serif;
+            background-color: #f0f2f5;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+        }
+        .user-bar {
+            text-align: right;
+            padding: 10px 20px;
+            background-color: #fff;
+            border-bottom: 1px solid #ddd;
+            margin-bottom: 20px;
+        }
+        .user-bar a, .user-bar span {
+            margin-left: 15px;
+            color: #1a73e8;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        .user-bar .logout-form {
+            display: inline;
+        }
+        .user-bar .logout-button {
+            background: none;
+            border: none;
+            color: #1a73e8;
+            padding: 0;
+            font: inherit;
+            cursor: pointer;
+            font-weight: 500;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        .header h1 {
+            font-weight: 700;
+            font-size: 2.8em;
+            color: #1a73e8;
+        }
+        .header p {
+            font-weight: 300;
+            font-size: 1.2em;
+            color: #5f6368;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        .article {
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
+            margin-bottom: 25px;
+            padding: 20px;
+            transition: box-shadow .3s ease-in-out;
+        }
+        .article:hover {
+            box-shadow: 0 10px 20px rgba(0,0,0,0.19), 0 6px 6px rgba(0,0,0,0.23);
+        }
+        .article h2 {
+            margin-top: 0;
+            font-size: 1.4em;
+        }
+        .article h2 a {
+            text-decoration: none;
+            color: #1a73e8;
+        }
+        .article-meta {
+            font-size: 0.85em;
+            color: #5f6368;
+            margin-bottom: 15px;
+        }
+        .article-meta .source {
+            font-weight: 700;
+        }
+        .ai-analysis {
+            margin-top: 15px;
+            border-top: 1px solid #e8e8e8;
+            padding-top: 15px;
+        }
+        .ai-analysis h4 {
+            margin-top: 0;
+            margin-bottom: 10px;
+            color: #3c4043;
+            font-size: 1.1em;
+            font-weight: 700;
+        }
+        .ai-summary {
+            font-style: italic;
+            color: #4d5156;
+            line-height: 1.6;
+        }
+        .ai-tags {
+            margin-top: 10px;
+        }
+        .ai-tags strong {
+            font-style: normal;
+            font-size: 1em;
+            color: #3c4043;
+            font-weight: 700;
+            margin-right: 5px;
+        }
+        .ai-tags span.tag {
+            display: inline-block;
+            background-color: #e8f0fe;
+            color: #1967d2;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 0.85em;
+            margin-right: 8px;
+            margin-top: 5px;
+        }
+        .empty-state {
+            text-align: center;
+            padding: 50px;
+            background-color: #fff;
+            border-radius: 8px;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 40px;
+            font-size: 0.9em;
+            color: #5f6368;
+        }
+        .search-container {
+            max-width: 600px;
+            margin: 0 auto 40px;
+        }
+        .search-container form {
+            display: flex;
+        }
+        .search-input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 20px 0 0 20px;
+            box-sizing: border-box;
+            font-size: 1em;
+            outline: none;
+        }
+        .search-button {
+            padding: 12px 20px;
+            border: none;
+            background-color: #1a73e8;
+            color: white;
+            border-radius: 0 20px 20px 0;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 500;
+        }
+        .search-results-header {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #3c4043;
+        }
+        .recommendations-header {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #1a73e8;
+            font-size: 1.8em;
+        }
+        .article-recommended {
+            border-left: 4px solid #1a73e8;
+        }
+        .section-divider {
+            margin-top: 40px;
+            margin-bottom: 40px;
+            border: 0;
+            border-top: 1px solid #ddd;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="user-bar">
+        <div sec:authorize="isAuthenticated()">
+            <span>欢迎, <span sec:authentication="name"></span>!</span>
+            <a href="/profile">个人主页</a>
+            <form th:action="@{/logout}" method="post" class="logout-form">
+                <button type="submit" class="logout-button">注销</button>
+            </form>
+        </div>
+        <div sec:authorize="isAnonymous()">
+            <a href="/login">登录</a>
+            <a href="/register">注册</a>
+        </div>
+    </div>
+
+    <div class="header">
+        <h1>SportsLens AI</h1>
+        <p>智能体育新闻聚合与分析平台</p>
+    </div>
+
+    <div class="search-container">
+        <form th:action="@{/search}" method="get">
+            <input type="search" name="query" placeholder="搜索新闻标题..." class="search-input" required>
+            <button type="submit" class="search-button">搜索</button>
+        </form>
+    </div>
+
+    <div class="container">
+        <div th:if="${recommendedArticles != null and not recommendedArticles.isEmpty()}">
+            <h3 class="recommendations-header">为你推荐</h3>
+            <div th:each="article : ${recommendedArticles}" class="article article-recommended">
+                <h2><a th:href="@{/article/{id}(id=${article.id})}" th:text="${article.titleCn != null ? article.titleCn : article.title}" target="_blank">Article Title</a></h2>
+                <div class="article-meta">
+                    <span class="source" th:text="${article.source} + ' (英文)'">Source</span> -
+                    <span th:text="${#temporals.format(article.publishDate, 'yyyy-MM-dd HH:mm')}">Date</span>
+                </div>
+                 <div th:if="${article.summaryAiCn != null or article.keywordsAi != null}" class="ai-analysis">
+                    <h4>AI 智能分析</h4>
+                    <p th:if="${article.summaryAiCn != null}" class="ai-summary">
+                        <strong style="font-style: normal;">AI摘要：</strong>
+                        <span th:text="${article.summaryAiCn}">AI-generated summary...</span>
+                    </p>
+                    <div th:if="${article.keywordsAi != null}" class="ai-tags">
+                        <strong>关键词：</strong>
+                        <span class="tag" th:each="keyword : ${#strings.arraySplit(article.keywordsAi, ',')}" th:text="${#strings.trim(keyword)}">Keyword</span>
+                    </div>
+                </div>
+            </div>
+            <hr class="section-divider"/>
+        </div>
+
+        <h3 th:if="${searchQuery}" th:text="'搜索结果: ' + ${searchQuery}" class="search-results-header"></h3>
+        <div th:if="${articles.isEmpty()}" class="empty-state">
+            <h2 th:if="${searchQuery}">找不到相关新闻</h2>
+            <p th:if="${searchQuery}">请尝试其它关键词</p>
+
+            <h2 th:unless="${searchQuery}">暂无新闻</h2>
+            <p th:unless="${searchQuery}">后台爬虫正在努力工作中... 请稍后刷新页面。</p>
+        </div>
+
+        <div th:each="article : ${articles}" class="article">
+            <h2><a th:href="@{/article/{id}(id=${article.id})}" th:text="${article.titleCn != null ? article.titleCn : article.title}" target="_blank">Article Title</a></h2>
+            <div class="article-meta">
+                <span class="source" th:text="${article.source} + ' (英文)'">Source</span> - 
+                <span th:text="${#temporals.format(article.publishDate, 'yyyy-MM-dd HH:mm')}">Date</span>
+            </div>
+
+            <div th:if="${article.summaryAiCn != null or article.keywordsAi != null}" class="ai-analysis">
+                <h4>AI 智能分析</h4>
+                <p th:if="${article.summaryAiCn != null}" class="ai-summary">
+                    <strong style="font-style: normal;">AI摘要：</strong>
+                    <span th:text="${article.summaryAiCn}">AI-generated summary...</span>
+                </p>
+                <div th:if="${article.keywordsAi != null}" class="ai-tags">
+                    <strong>关键词：</strong>
+                    <span class="tag" th:each="keyword : ${#strings.arraySplit(article.keywordsAi, ',')}" th:text="${#strings.trim(keyword)}">Keyword</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">
+        <p>&copy; 2025 SportsLens AI </p>
+    </div>
+
+</body>
+</html>
